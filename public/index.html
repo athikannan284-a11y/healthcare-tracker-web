@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <title>Health Tracker — Report Symptoms</title>
+  <meta name="description" content="Submit your health symptoms and location to help visualize disease spread in your community.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+
+  <style>
+    /* ====== Report Page Premium Styles ====== */
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .report-page {
+      min-height: calc(100vh - 71px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(to bottom, rgba(6, 6, 11, 0.6), rgba(6, 6, 11, 0.8)), 
+                  url('/images/bg_new.png') center/cover no-repeat;
+    }
+
+    @keyframes blobFloat {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, -20px) scale(1.1); }
+    }
+
+    /* 3D Floating Shapes */
+    .floating-shapes {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shape-wrap {
+      position: absolute;
+      pointer-events: none;
+      transition: transform 0.1s ease-out;
+    }
+
+    .shape {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 59, 92, 0.1), rgba(255, 140, 66, 0.1));
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(5px);
+      border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+      animation: morph 15s ease-in-out infinite alternate;
+    }
+
+    .shape--1 { width: 300px; height: 300px; top: 10%; left: -100px; }
+    .shape--1 .shape { animation-duration: 18s; }
+    .shape--2 { width: 400px; height: 400px; bottom: 10%; right: -150px; }
+    .shape--2 .shape { animation-duration: 22s; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(6, 182, 212, 0.1)); }
+    .shape--3 { width: 150px; height: 150px; top: 40%; right: 10%; opacity: 0.5; }
+    .shape--3 .shape { animation-duration: 12s; }
+
+    @keyframes morph {
+      0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; transform: rotate(0deg) translate(0, 0); }
+      50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
+      100% { border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%; transform: rotate(180deg) translate(20px, 40px); }
+    }
+
+    /* Main container */
+    .report-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    /* Hero section */
+    .report-hero {
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .report-hero__icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255, 59, 92, 0.15), rgba(255, 140, 66, 0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 32px;
+      border: 1px solid rgba(255, 59, 92, 0.2);
+      backdrop-filter: blur(10px);
+      animation: iconPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes iconPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 92, 0.2); }
+      50% { transform: scale(1.05); box-shadow: 0 0 30px 5px rgba(255, 59, 92, 0.1); }
+    }
+
+    .report-hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 50px;
+      background: rgba(255, 59, 92, 0.1);
+      border: 1px solid rgba(255, 59, 92, 0.2);
+      color: #ff6b7a;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .report-hero__badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #ff3b5c;
+      animation: blink 1.5s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .report-hero__title {
+      font-size: 32px;
+      font-weight: 800;
+      color: #f0f0f8;
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+
+    .report-hero__title span {
+      background: linear-gradient(135deg, #ff3b5c, #ff8c42, #ffd166);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .report-hero__subtitle {
+      font-size: 15px;
+      color: #8888a8;
+      line-height: 1.5;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    /* Form Card */
+    .report-card {
+      background: rgba(18, 18, 32, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 36px 32px;
+      backdrop-filter: blur(40px) saturate(150%);
+      -webkit-backdrop-filter: blur(40px) saturate(150%);
+      box-shadow: 
+        0 40px 100px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+    }
+
+    .report-card:hover {
+      box-shadow: 
+        0 60px 120px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+        0 0 40px rgba(255, 59, 92, 0.1);
+    }
+
+    .report-card > * {
+      transform: translateZ(20px);
+    }
+
+    /* Form Group */
+    .report-field {
+      margin-bottom: 24px;
+    }
+
+    .report-field__label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #b0b0c8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .report-field__label-icon {
+      font-size: 16px;
+    }
+
+    .report-field__input,
+    .report-field__textarea {
+      width: 100%;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      color: #f0f0f8;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none;
+      box-sizing: border-box;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) inset;
+    }
+
+    .report-field__textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .report-field__input:focus,
+    .report-field__textarea:focus {
+      border-color: rgba(255, 59, 92, 0.6);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 
+        0 0 0 4px rgba(255, 59, 92, 0.15),
+        0 10px 30px rgba(255, 59, 92, 0.1),
+        0 2px 10px rgba(0, 0, 0, 0.2) inset;
+      transform: translateY(-2px);
+    }
+
+    .report-field__input::placeholder,
+    .report-field__textarea::placeholder {
+      color: #555570;
+    }
+
+    .report-field__hint {
+      font-size: 12px;
+      color: #666680;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Quick symptom tags */
+    .quick-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .quick-tag {
+      padding: 6px 14px;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #9999b0;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .quick-tag:hover {
+      background: rgba(255, 59, 92, 0.1);
+      border-color: rgba(255, 59, 92, 0.3);
+      color: #ff6b7a;
+      transform: translateY(-1px);
+    }
+
+    /* Submit Button */
+    .report-submit {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ff3b5c, #ff8c42);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.3px;
+    }
+
+    .report-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 59, 92, 0.35);
+    }
+
+    .report-submit:active {
+      transform: translateY(0);
+    }
+
+    .report-submit::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .report-submit:hover::after {
+      left: 100%;
+    }
+
+    .report-submit .btn__spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    .report-submit.loading .btn__spinner {
+      display: inline-block;
+    }
+
+    .report-submit.loading .btn__text {
+      opacity: 0.7;
+    }
+
+    /* Divider */
+    .report-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: #555570;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .report-divider::before,
+    .report-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    /* Stats footer */
+    .report-footer {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+    }
+
+    .report-stat {
+      text-align: center;
+    }
+
+    .report-stat__value {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff3b5c, #ffd166);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .report-stat__label {
+      font-size: 11px;
+      color: #666680;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* Trust badges */
+    .trust-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 28px;
+      animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #666680;
+    }
+
+    .trust-item__icon {
+      font-size: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .report-card {
+        padding: 28px 20px;
+      }
+      .report-hero__title {
+        font-size: 26px;
+      }
+      .report-footer {
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-bg">
+    <div class="glow-sphere glow-sphere--1"></div>
+    <div class="glow-sphere glow-sphere--2"></div>
+    <div class="glow-sphere glow-sphere--3"></div>
+  </div>
+
+  <!-- ====== Navigation ====== -->
+  <nav class="navbar">
+    <a href="/" class="navbar__brand">
+      <div class="navbar__icon">🌍</div>
+      <span class="navbar__title">Health Tracker</span>
+    </a>
+    <div class="navbar__links">
+      <a href="/" class="navbar__link navbar__link--active" id="nav-form">📝 Report</a>
+      <a href="/heatmap.html" class="navbar__link" id="nav-heatmap">🏥 Heatmap</a>
+      <a href="/dashboard.html" class="navbar__link" id="nav-dashboard">📊 Dashboard</a>
+    </div>
+  </nav>
+
+  <!-- ====== Report Page ====== -->
+  <div class="report-page">
+    <div class="floating-shapes">
+      <div class="shape-wrap shape--1"><div class="shape"></div></div>
+      <div class="shape-wrap shape--2"><div class="shape"></div></div>
+      <div class="shape-wrap shape--3"><div class="shape"></div></div>
+    </div>
+
+    <div class="report-container">
+
+      <!-- Hero -->
+      <div class="report-hero">
+        <h1 class="report-hero__title">Report Your <span>Symptoms</span></h1>
+        <div class="report-hero__badge">Live Tracking</div>
+        <p class="report-hero__subtitle"></p>
+      </div>
+
+      <!-- Form Card -->
+      <div class="report-card">
+        <form id="reportForm">
+
+          <!-- Personal Details -->
+          <div class="report-field">
+            <label class="report-field__label" for="name">
+              <span class="report-field__label-icon">👤</span>
+              Full Name
+            </label>
+            <input
+              class="report-field__input"
+              type="text"
+              id="name"
+              name="name"
+              placeholder="e.g. John Doe"
+              required
+            >
+          </div>
+
+          <div class="report-field">
+            <label class="report-field__label" for="dob">
+              <span class="report-field__label-icon">📅</span>
+              Date of Birth
+            </label>
+            <input
+              class="report-field__input"
+              type="date"
+              id="dob"
+              name="dob"
+              required
+            >
+          </div>
+
+          <!-- Symptoms -->
+          <div class="report-field">
+            <label class="report-field__label" for="symptoms">
+              <span class="report-field__label-icon">🤒</span>
+              Symptoms
+            </label>
+            <textarea
+              class="report-field__textarea"
+              id="symptoms"
+              name="symptoms"
+              placeholder="Describe your symptoms..."
+              required
+            ></textarea>
+            <p class="report-field__hint">💡 Separate multiple symptoms with commas</p>
+
+            <div class="quick-tags">
+              <button type="button" class="quick-tag" onclick="addSymptom('Fever')">🌡️ Fever</button>
+              <button type="button" class="quick-tag" onclick="addSymptom('Cough')">😷 Cough</button>
+              <button type="button" class="quick-tag" onclick="addSymptom('Headache')">🤕 Headache</button>
+              <button type="button" class="quick-tag" onclick="addSymptom('Sore Throat')">🗣️ Sore Throat</button>
+              <button type="button" class="quick-tag" onclick="addSymptom('Fatigue')">😴 Fatigue</button>
+              <button type="button" class="quick-tag" onclick="addSymptom('Body Ache')">💪 Body Ache</button>
+            </div>
+          </div>
+
+          <div class="report-divider">Location Details</div>
+
+          <!-- Location -->
+          <div class="report-field">
+            <label class="report-field__label" for="location">
+              Location <img src="/images/location_pin_premium.png" alt="Loc" style="width: 22px; height: 22px; vertical-align: middle; margin-left: 4px; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));">
+            </label>
+            <input
+              class="report-field__input"
+              type="text"
+              id="location"
+              name="location"
+              placeholder="e.g. Gandhipuram, RS Puram, Kalapatti..."
+              required
+            >
+            <p class="report-field__hint">📍 Enter any area within Coimbatore</p>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="report-submit" id="submitBtn">
+            <span class="btn__spinner"></span>
+            <span class="btn__text">🚀 Submit Report</span>
+          </button>
+
+        </form>
+
+        <!-- Stats Footer -->
+        <div class="report-divider">Community Impact</div>
+        <div class="report-footer">
+          <div class="report-stat">
+            <div class="report-stat__value" id="footerTotal">--</div>
+            <div class="report-stat__label">Total Reports</div>
+          </div>
+          <div class="report-stat">
+            <div class="report-stat__value" id="footerLocations">--</div>
+            <div class="report-stat__label">Locations</div>
+          </div>
+          <div class="report-stat">
+            <div class="report-stat__value" id="footerToday">--</div>
+            <div class="report-stat__label">Today</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust Row -->
+      <div class="trust-row">
+        <div class="trust-item">
+          <span class="trust-item__icon">🔒</span>
+          Anonymous
+        </div>
+        <div class="trust-item">
+          <span class="trust-item__icon">⚡</span>
+          Real-time
+        </div>
+        <div class="trust-item">
+          <span class="trust-item__icon">🌐</span>
+          Community-driven
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast container for notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="/js/form.js"></script>
+  <script src="/js/cursor.js"></script>
+
+  <!-- Quick Tag & Stats Script -->
+  <script>
+    // Add symptom from quick tags
+    function addSymptom(symptom) {
+      const textarea = document.getElementById('symptoms');
+      const current = textarea.value.trim();
+      if (current) {
+        // Check if symptom already exists
+        const existing = current.split(',').map(s => s.trim().toLowerCase());
+        if (!existing.includes(symptom.toLowerCase())) {
+          textarea.value = current + ', ' + symptom;
+        }
+      } else {
+        textarea.value = symptom;
+      }
+      textarea.focus();
+    }
+
+    // Load community stats
+    async function loadFooterStats() {
+      try {
+        const res = await fetch('/api/reports');
+        const reports = await res.json();
+        
+        document.getElementById('footerTotal').textContent = reports.length;
+        
+        const uniqueLocations = new Set(reports.map(r => r.location.split(',')[0].trim()));
+        document.getElementById('footerLocations').textContent = uniqueLocations.size;
+        
+        const today = new Date().toISOString().split('T')[0];
+        const todayCount = reports.filter(r => r.timestamp && r.timestamp.startsWith(today)).length;
+        document.getElementById('footerToday').textContent = todayCount;
+      } catch (err) {
+        console.log('Stats load error:', err);
+      }
+    }
+
+    // Load footer stats on page load
+    window.addEventListener('DOMContentLoaded', loadFooterStats);
+  </script>
+</body>
+</html>

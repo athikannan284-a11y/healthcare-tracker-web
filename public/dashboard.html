@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <title>Health Dashboard — Health Tracker</title>
+  <meta name="description" content="Interactive heatmap showing community health data with gravity-inspired visualization effects.">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+</head>
+<body>
+  <div class="glow-bg">
+    <div class="glow-sphere glow-sphere--1"></div>
+    <div class="glow-sphere glow-sphere--2"></div>
+    <div class="glow-sphere glow-sphere--3"></div>
+  </div>
+
+  <!-- ====== Navigation ====== -->
+  <nav class="navbar">
+    <a href="/" class="navbar__brand">
+      <div class="navbar__icon">🌍</div>
+      <span class="navbar__title">Health Tracker</span>
+    </a>
+    <div class="navbar__links">
+      <a href="/" class="navbar__link" id="nav-form">📝 Report</a>
+      <a href="/heatmap.html" class="navbar__link" id="nav-heatmap">🏥 Heatmap</a>
+      <a href="/dashboard.html" class="navbar__link navbar__link--active" id="nav-dashboard">🗺️ Dashboard</a>
+    </div>
+  </nav>
+
+  <!-- ====== Dashboard ====== -->
+  <div class="dashboard">
+
+    <!-- Toolbar with stats and controls -->
+    <div class="dashboard__toolbar">
+      <div class="dashboard__stats">
+        <div class="stat">
+          <span class="stat__value" id="statTotal">0</span>
+          <span class="stat__label">Reports</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value" id="statLocations">0</span>
+          <span class="stat__label">Locations</span>
+        </div>
+        <div class="stat">
+          <span class="stat__value" id="statTopSymptom">—</span>
+          <span class="stat__label">Top Symptom</span>
+        </div>
+      </div>
+
+      <div class="dashboard__controls">
+        <!-- Symptom filter dropdown -->
+        <select class="filter-select" id="symptomFilter">
+          <option value="">All Symptoms</option>
+        </select>
+
+        <!-- Refresh button -->
+        <button class="btn btn--secondary btn--icon" id="refreshBtn" title="Refresh data">
+          🔄
+        </button>
+      </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="map-container" style="padding: 24px; max-height: 450px;">
+      <canvas id="histogramChart"></canvas>
+
+      <!-- Empty state (shown when no data) -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-state__icon">📊</div>
+        <div class="empty-state__text">No reports yet</div>
+        <div class="empty-state__hint">Submit symptoms to populate the histogram</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Our histogram logic -->
+  <script src="/js/histogram.js"></script>
+</body>
+</html>

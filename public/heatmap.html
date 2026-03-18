@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- SEO -->
+  <title>Clinic Heatmaps — Health Tracker</title>
+  <meta name="description" content="View clinic-specific health data heatmaps for Coimbatore.">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+</head>
+<body>
+  <div class="glow-bg">
+    <div class="glow-sphere glow-sphere--1"></div>
+    <div class="glow-sphere glow-sphere--2"></div>
+    <div class="glow-sphere glow-sphere--3"></div>
+  </div>
+
+  <!-- ====== Navigation ====== -->
+  <nav class="navbar">
+    <a href="/" class="navbar__brand">
+      <div class="navbar__icon">🌍</div>
+      <span class="navbar__title">Health Tracker</span>
+    </a>
+    <div class="navbar__links">
+      <a href="/" class="navbar__link" id="nav-form">📝 Report</a>
+      <a href="/heatmap.html" class="navbar__link navbar__link--active" id="nav-heatmap">🏥 Heatmap</a>
+      <a href="/dashboard.html" class="navbar__link" id="nav-dashboard">🗺️ Dashboard</a>
+    </div>
+  </nav>
+
+  <!-- ====== Split Layout ====== -->
+  <div class="split-layout">
+    
+    <!-- Sidebar for Clinics -->
+    <aside class="sidebar">
+      <div class="sidebar__header">
+        <h2 class="sidebar__title">Coimbatore Clinics</h2>
+        <p class="sidebar__subtitle">Select a clinic to view its specific health report heatmap.</p>
+      </div>
+      
+      <div class="clinic-list" id="clinicList">
+        <!-- Clinic cards will be dynamically injected here -->
+      </div>
+    </aside>
+
+    <!-- Main Map Area -->
+    <main class="map-area">
+      <div id="clinicMap" class="full-map"></div>
+      
+      <!-- Empty state when no clinic is selected -->
+      <div class="empty-state" id="heatmapEmptyState">
+        <div class="empty-state__icon">🏥</div>
+        <div class="empty-state__text">Select a Clinic</div>
+        <div class="empty-state__hint">Choose a clinic from the sidebar to view its heatmap data</div>
+      </div>
+
+      <!-- Legend -->
+      <div class="map-legend">
+        <div class="map-legend__title">Case Density</div>
+        <div class="map-legend__gradient"></div>
+        <div class="map-legend__labels">
+          <span>Low</span>
+          <span>Medium</span>
+          <span>High</span>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Leaflet JS & Heatmap Plugin -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+  <!-- Heatmap Logic -->
+  <script src="/js/heatmap.js"></script>
+</body>
+</html>
