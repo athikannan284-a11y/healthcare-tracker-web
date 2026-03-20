@@ -42,26 +42,40 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ name, dob, symptoms, location })
       });
 
-      const data = await response.json();
+      // Status & Content-Type check
+      const contentType = response.headers.get('content-type');
+      let data = {};
+      let rawText = '';
+
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        rawText = await response.text();
+        console.error('Non-JSON response:', rawText);
+      }
 
       if (response.ok) {
-        // Success! Show a nice toast and clear the form
-        showToast('✅ Report submitted successfully!', 'success');
+        // Success!
+        showToast('✅ Report submitted successfully! [v2.0]', 'success');
         form.reset();
 
-        // Redirect to dashboard after a short delay
         setTimeout(() => {
           window.location.href = '/dashboard.html';
         }, 1500);
       } else {
-        // Server returned an error
-        showToast(data.error || 'Something went wrong.', 'error');
+        // Server returned an error (400, 500, etc.)
+        // If we have rawText but no data.error, show a snippet of the rawText
+        let errorMsg = data.error || (rawText ? `Server Error: ${rawText.substring(0, 50)}...` : `Status ${response.status}`);
+        if (data.details) errorMsg += ` (${data.details})`;
+        
+        showToast(`❌ ${errorMsg} [v2.0]`, 'error');
+        console.error('Server error:', response.status, data || rawText);
       }
 
     } catch (err) {
-      // Network error or server is down
-      console.error('Submission error:', err);
-      showToast('❌ Could not connect to server. Is it running?', 'error');
+      // Network error, timeout, or server is down
+      console.error('Submission network error:', err);
+      showToast('❌ Connection Failed. Check internet/server status. [v2.0]', 'error');
     } finally {
       // Remove loading state
       submitBtn.classList.remove('btn--loading');

@@ -12,11 +12,17 @@ const cors = require('cors');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config(); // Load environment variables from .env
+console.log('🚀 [SERVER] Starting Health Tracker v2.0...');
 const { createClient } = require('@supabase/supabase-js');
 
 // --- Initialize Supabase Client ---
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ CRITICAL ERROR: SUPABASE_URL and SUPABASE_KEY must be set in .env');
+  console.error('Submission and data fetching will fail.');
+}
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- Create the Express app ---
@@ -37,10 +43,26 @@ async function geocode(locationString) {
     const encoded = encodeURIComponent(locationString);
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&limit=1`;
 
-    // Node 18+ has built-in fetch; for older versions you'd need node-fetch
+    // Add a timeout to the fetch to prevent hanging on slow mobile networks
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
     const response = await fetch(url, {
-      headers: { 'User-Agent': 'GravityHealthTracker/1.0' }
+      headers: { 'User-Agent': 'GravityHealthTracker/1.0' },
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      console.warn(`[Geocode] Nominatim returned status ${response.status}. Falling back.`);
+      return {
+        lat: 11.0168 + (Math.random() - 0.5) * 0.05,
+        lng: 76.9558 + (Math.random() - 0.5) * 0.05,
+        displayName: `${locationString} (Approximated)`
+      };
+    }
+    
     const data = await response.json();
 
     if (data && data.length > 0) {
@@ -51,25 +73,18 @@ async function geocode(locationString) {
       };
     }
     
-    // FALLBACK FOR HACKATHON:
-    // If the OpenStreetMap API can't find the exact spelling (e.g. "Ghandipuram" instead of "Gandhipuram")
-    // but the user mentions Coimbatore or we assume it's local, we will return a generic
-    // Coimbatore coordinate rather than failing and blocking the submission.
-    console.log(`Geocode failed for EXACT match on "${locationString}". Using generic Coimbatore fallback.`);
-    
-    // Add a slight random offset so they don't all stack on the exact identical pixel
-    const randomOffsetLat = (Math.random() - 0.5) * 0.05;
-    const randomOffsetLng = (Math.random() - 0.5) * 0.05;
+    // FALLBACK:
+    console.log(`Geocode failed for "${locationString}". Using Coimbatore fallback.`);
     
     return {
-      lat: 11.0168 + randomOffsetLat,
-      lng: 76.9558 + randomOffsetLng,
-      displayName: `${locationString} (Approximated in Coimbatore)`
+      lat: 11.0168 + (Math.random() - 0.5) * 0.05,
+      lng: 76.9558 + (Math.random() - 0.5) * 0.05,
+      displayName: `${locationString} (Approximated)`
     };
 
   } catch (err) {
-    console.error('Geocoding error:', err.message);
-    // Even on network error, fallback to Coimbatore for demo purposes
+    console.error('Geocoding error:', err.name === 'AbortError' ? 'Request timed out' : err.message);
+    // Always fallback to Coimbatore so the submission is NOT blocked
     return {
       lat: 11.0168,
       lng: 76.9558,
@@ -86,21 +101,20 @@ async function geocode(locationString) {
 app.post('/api/reports', async (req, res) => {
   try {
     const { name, dob, symptoms, location } = req.body;
+    console.log(`[API] Incoming report request: ${name}, ${location}`);
 
     // Validate input
     if (!name || !dob || !symptoms || !location) {
+      console.warn('[API] Validation failed: missing fields');
       return res.status(400).json({
         error: 'Name, Date of Birth, Symptoms, and Location are all required.'
       });
     }
 
     // Geocode the location to get coordinates
+    console.log(`[API] Geocoding location: "${location}"...`);
     const geo = await geocode(location);
-    if (!geo) {
-      return res.status(400).json({
-        error: `Could not find coordinates for "${location}". Try a different city name or zipcode.`
-      });
-    }
+    console.log(`[API] Geocode result: ${geo.lat}, ${geo.lng} (${geo.displayName})`);
 
     // Build the report object
     const report = {
@@ -116,22 +130,26 @@ app.post('/api/reports', async (req, res) => {
     };
 
     // Save to Supabase 'reports' table
+    console.log('[API] Inserting into Supabase...');
     const { data, error } = await supabase
       .from('reports')
       .insert([report])
       .select();
 
     if (error) {
-      console.error('Supabase insert error:', error.message);
-      return res.status(500).json({ error: 'Database error storing report.' });
+      console.error('[API] Supabase insert error:', error.message);
+      return res.status(500).json({ 
+        error: 'Database error storing report.',
+        details: error.message 
+      });
     }
 
-    console.log(`✅ New report saved to Supabase: "${symptoms}" at ${location}`);
+    console.log(`✅ [API] New report saved to Supabase: "${symptoms}" at ${location}`);
     res.status(201).json({ message: 'Report submitted successfully!', report });
 
   } catch (err) {
-    console.error('Error saving report:', err);
-    res.status(500).json({ error: 'Server error. Please try again.' });
+    console.error('[API] Server error during submission:', err);
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 });
 
